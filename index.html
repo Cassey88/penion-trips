@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Penion Drive — Trip Log</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2c4530">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<style>
+  :root {
+    --ink: #22301f;
+    --paper: #f6f5ef;
+    --card: #fffefa;
+    --green: #3c5a3a;
+    --green-deep: #2c4530;
+    --line: #dcd9cc;
+    --faint: #7c8375;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Avenir Next', 'Segoe UI', system-ui, sans-serif;
+    padding: 24px 14px 48px;
+  }
+  .shell { max-width: 560px; margin: 0 auto; }
+
+  header { margin-bottom: 20px; padding-left: 2px; }
+  .eyebrow {
+    font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--green); font-weight: 600; margin-bottom: 4px;
+  }
+  h1 {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 34px; font-weight: 700; margin: 0; line-height: 1.1;
+    color: var(--green-deep);
+  }
+  .subline { margin-top: 6px; font-size: 14px; color: var(--faint); }
+
+  .card {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 12px; padding: 18px 16px; margin-bottom: 16px;
+    box-shadow: 0 1px 2px rgba(34,48,31,0.05);
+  }
+  .card-label {
+    font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--faint); font-weight: 600; margin-bottom: 12px;
+  }
+  .field-label {
+    display: block; font-size: 13px; font-weight: 600;
+    margin: 4px 0 6px;
+  }
+  input[type="date"], input[type="text"] {
+    width: 100%; padding: 10px 12px; font-size: 16px;
+    border: 1px solid var(--line); border-radius: 8px;
+    background: #fff; color: var(--ink); margin-bottom: 14px;
+    font-family: inherit;
+  }
+  .chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+  .chip {
+    padding: 8px 12px; font-size: 13.5px; border: 1px solid var(--line);
+    border-radius: 999px; background: #fff; color: var(--ink);
+    cursor: pointer; font-family: inherit; line-height: 1.2;
+  }
+  .chip:hover { border-color: var(--green); }
+  .chip.active {
+    background: var(--green); border-color: var(--green);
+    color: #fff; font-weight: 600;
+  }
+  .primary {
+    width: 100%; padding: 12px 16px; font-size: 16px; font-weight: 600;
+    background: var(--green-deep); color: #fff; border: none;
+    border-radius: 8px; cursor: pointer; font-family: inherit;
+  }
+  .primary:hover { background: var(--green); }
+
+  .flash {
+    margin-top: 12px; padding: 9px 12px; border-radius: 8px; font-size: 14px;
+    background: #e8efe4; color: var(--green-deep); border: 1px solid #c7d6bf;
+    display: none;
+  }
+  .flash.error { background: #f7e8e6; color: #7a2e24; border-color: #e4c4bd; }
+  .flash.show { display: block; }
+
+  .list-head { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+  .tool-row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .tool {
+    padding: 7px 12px; font-size: 13px; font-weight: 600;
+    border: 1px solid var(--line); border-radius: 8px;
+    background: #fff; color: var(--green-deep); cursor: pointer;
+    font-family: inherit;
+  }
+  .tool:hover:not(:disabled) { border-color: var(--green); }
+  .tool:disabled { opacity: 0.45; cursor: default; }
+
+  ul { list-style: none; margin: 0; padding: 0; }
+  .row {
+    display: flex; align-items: baseline; gap: 12px;
+    padding: 12px 4px; border-top: 1px solid var(--line);
+  }
+  .row-date {
+    flex-shrink: 0; width: 118px; font-size: 13.5px; font-weight: 600;
+    color: var(--green-deep); font-variant-numeric: tabular-nums;
+  }
+  .row-purpose { flex: 1; font-size: 15px; line-height: 1.35; }
+  .row { cursor: pointer; }
+  .row:hover { background: #f2f1e8; }
+  .row-hint {
+    flex-shrink: 0; color: #b0aa99; font-size: 13px; align-self: center;
+  }
+  .edit-panel {
+    padding: 14px 12px; border-top: 1px solid var(--line);
+    background: #f0efe6; border-radius: 10px; margin: 6px 0;
+  }
+  .edit-panel input[type="date"], .edit-panel input[type="text"] { margin-bottom: 10px; }
+  .edit-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+  .tool.danger { color: #8c3b2f; border-color: #e0c4bd; }
+  .tool.danger:hover { border-color: #8c3b2f; background: #f9efed; }
+
+  .empty {
+    padding: 22px 4px 26px; font-size: 14.5px; color: var(--faint);
+    border-top: 1px solid var(--line);
+  }
+  footer { font-size: 12.5px; color: var(--faint); padding-left: 2px; line-height: 1.5; }
+
+  button:focus-visible, input:focus-visible {
+    outline: 2px solid var(--green); outline-offset: 2px;
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+  <header>
+    <div class="eyebrow">Property trip log</div>
+    <h1>Penion Drive</h1>
+    <div class="subline" id="subline">0 trips recorded</div>
+  </header>
+
+  <section class="card">
+    <div class="card-label">Record a trip</div>
+
+    <label class="field-label" for="trip-date">Date</label>
+    <input type="date" id="trip-date">
+
+    <label class="field-label" for="trip-purpose">Purpose</label>
+    <div class="chip-row" id="chip-row"></div>
+    <input type="text" id="trip-purpose" placeholder="Or type your own purpose…">
+
+    <button type="button" class="primary" id="add-btn">Add trip</button>
+    <div class="flash" id="flash" role="status"></div>
+  </section>
+
+  <section class="card" style="padding-bottom:8px">
+    <div class="list-head">
+      <div class="card-label">Trips</div>
+      <div class="tool-row">
+        <button type="button" class="tool" id="sort-btn" title="Toggle sort order">Newest first &darr;</button>
+        <button type="button" class="tool" id="export-btn" disabled>Export CSV</button>
+        <button type="button" class="tool" id="import-btn">Import CSV</button>
+        <input type="file" id="file-input" accept=".csv,text/csv" style="display:none">
+      </div>
+    </div>
+    <div id="list-area"><div class="empty">Loading…</div></div>
+  </section>
+
+  <footer>CSV format: Date, Purpose — one trip per row. Dates accepted as YYYY-MM-DD or DD/MM/YYYY.</footer>
+</div>
+
+<script>
+const STORAGE_KEY = "penion-drive-trips";
+const PRESETS = [
+  "Water meter reading and weeding",
+  "Meet potential tenants",
+  "Meet contractor",
+  "House inspection",
+];
+
+let entries = [];
+let sortDesc = true;
+let editingId = null;
+let flashTimer = null;
+
+const $ = (id) => document.getElementById(id);
+
+const todayISO = () => {
+  const d = new Date();
+  const off = d.getTimezoneOffset();
+  return new Date(d.getTime() - off * 60000).toISOString().slice(0, 10);
+};
+
+const fmtDate = (iso) => {
+  const d = new Date(iso + "T12:00:00");
+  if (isNaN(d)) return iso;
+  const [y, m, day] = iso.split("-");
+  const wd = d.toLocaleDateString("en-NZ", { weekday: "short" });
+  return day + "/" + m + "/" + y + " " + wd;
+};
+
+const escapeHTML = (s) => s.replace(/[&<>"']/g, (c) =>
+  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+// --- CSV helpers ---
+const csvEscape = (s) => {
+  const str = String(s ?? "");
+  return /[",\n\r]/.test(str) ? '"' + str.replace(/"/g, '""') + '"' : str;
+};
+
+const toCSV = (rows) =>
+  "Date,Purpose\n" + rows.map((e) => csvEscape(e.date) + "," + csvEscape(e.purpose)).join("\n");
+
+const parseCSV = (text) => {
+  const rows = [];
+  let row = [], field = "", inQ = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQ) {
+      if (c === '"') {
+        if (text[i + 1] === '"') { field += '"'; i++; }
+        else inQ = false;
+      } else field += c;
+    } else if (c === '"') inQ = true;
+    else if (c === ",") { row.push(field); field = ""; }
+    else if (c === "\n" || c === "\r") {
+      if (c === "\r" && text[i + 1] === "\n") i++;
+      row.push(field); field = "";
+      if (row.some((f) => f.trim() !== "")) rows.push(row);
+      row = [];
+    } else field += c;
+  }
+  row.push(field);
+  if (row.some((f) => f.trim() !== "")) rows.push(row);
+  return rows;
+};
+
+const normaliseDate = (raw) => {
+  const s = raw.trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  const m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+  if (m) return m[3] + "-" + m[2].padStart(2, "0") + "-" + m[1].padStart(2, "0");
+  const d = new Date(s);
+  if (!isNaN(d)) {
+    const off = d.getTimezoneOffset();
+    return new Date(d.getTime() - off * 60000).toISOString().slice(0, 10);
+  }
+  return null;
+};
+
+const newId = () => Date.now() + "-" + Math.random().toString(36).slice(2, 7);
+
+// --- storage: uses browser localStorage; falls back to Claude artifact storage if present ---
+function load() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) { entries = JSON.parse(raw); render(); return; }
+  } catch (e) { /* localStorage unavailable */ }
+  // Fallback: Claude artifact storage
+  if (window.storage && window.storage.get) {
+    window.storage.get(STORAGE_KEY).then((res) => {
+      if (res && res.value) entries = JSON.parse(res.value);
+      render();
+    }).catch(() => render());
+    return;
+  }
+  render();
+}
+
+function persist() {
+  let saved = false;
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+    saved = true;
+  } catch (e) { /* localStorage unavailable */ }
+  if (window.storage && window.storage.set) {
+    window.storage.set(STORAGE_KEY, JSON.stringify(entries)).catch(() => {});
+    saved = true;
+  }
+  if (!saved) flash("Couldn't save — changes may not persist", true);
+}
+
+// --- UI ---
+function flash(text, isError) {
+  clearTimeout(flashTimer);
+  const el = $("flash");
+  el.textContent = text;
+  el.className = "flash show" + (isError ? " error" : "");
+  flashTimer = setTimeout(() => { el.className = "flash"; }, 3500);
+}
+
+function sorted() {
+  return [...entries].sort((a, b) =>
+    sortDesc ? (b.date.localeCompare(a.date) || (b.id > a.id ? 1 : -1))
+             : (a.date.localeCompare(b.date) || (a.id > b.id ? 1 : -1)));
+}
+
+function render() {
+  // subline
+  const yr = todayISO().slice(0, 4);
+  const thisYear = entries.filter((e) => e.date.startsWith(yr)).length;
+  let sub = entries.length + (entries.length === 1 ? " trip" : " trips") + " recorded";
+  if (entries.length) sub += " · " + thisYear + " this year";
+  $("subline").textContent = sub;
+
+  // chips
+  const purposeVal = $("trip-purpose").value;
+  $("chip-row").innerHTML = PRESETS.map((p) =>
+    '<button type="button" class="chip' + (purposeVal === p ? " active" : "") +
+    '" data-purpose="' + escapeHTML(p) + '" aria-pressed="' + (purposeVal === p) + '">' +
+    escapeHTML(p) + "</button>").join("");
+
+  // list
+  const list = sorted();
+  if (!list.length) {
+    $("list-area").innerHTML = '<div class="empty">No trips yet. Record your first visit above, or import a CSV.</div>';
+  } else {
+    $("list-area").innerHTML = "<ul>" + list.map((e) => {
+      if (e.id === editingId) {
+        return '<li class="edit-panel">' +
+          '<label class="field-label" for="edit-date">Date</label>' +
+          '<input type="date" id="edit-date" value="' + escapeHTML(e.date) + '">' +
+          '<label class="field-label" for="edit-purpose">Purpose</label>' +
+          '<input type="text" id="edit-purpose" value="' + escapeHTML(e.purpose) + '">' +
+          '<div class="edit-actions">' +
+          '<button type="button" class="tool save" data-id="' + e.id + '">Save</button>' +
+          '<button type="button" class="tool cancel">Cancel</button>' +
+          '<button type="button" class="tool danger delete" data-id="' + e.id + '">Delete</button>' +
+          "</div></li>";
+      }
+      return '<li class="row" data-id="' + e.id + '">' +
+        '<div class="row-date">' + escapeHTML(fmtDate(e.date)) + "</div>" +
+        '<div class="row-purpose">' + escapeHTML(e.purpose) + "</div>" +
+        '<div class="row-hint">&#9998;</div>' +
+        "</li>";
+    }).join("") + "</ul>";
+  }
+
+  $("sort-btn").innerHTML = sortDesc ? "Newest first &darr;" : "Oldest first &uarr;";
+  $("export-btn").disabled = !entries.length;
+}
+
+// --- actions ---
+function addEntry() {
+  const date = $("trip-date").value;
+  const purpose = $("trip-purpose").value.trim();
+  if (!date) { flash("Pick a date first", true); return; }
+  if (!purpose) { flash("Enter or pick a purpose", true); return; }
+  entries.push({ id: newId(), date, purpose });
+  persist();
+  $("trip-purpose").value = "";
+  $("trip-date").value = todayISO();
+  render();
+  flash("Trip recorded");
+}
+
+function exportCSV() {
+  const rows = sorted();
+  const blob = new Blob([toCSV(rows)], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "penion-drive-trips-" + todayISO() + ".csv";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  flash("Exported " + rows.length + (rows.length === 1 ? " trip" : " trips"));
+}
+
+function importCSV(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      let rows = parseCSV(String(reader.result));
+      if (!rows.length) { flash("File is empty", true); return; }
+      if (/date/i.test(rows[0][0] || "")) rows = rows.slice(1);
+      const imported = [];
+      let skipped = 0;
+      for (const r of rows) {
+        const d = normaliseDate(r[0] || "");
+        const p = (r[1] || "").trim();
+        if (d && p) imported.push({ id: newId(), date: d, purpose: p });
+        else skipped++;
+      }
+      if (!imported.length) { flash("No valid rows found (need Date, Purpose)", true); return; }
+      const existing = new Set(entries.map((e) => e.date + "|" + e.purpose));
+      const fresh = imported.filter((e) => !existing.has(e.date + "|" + e.purpose));
+      const dupes = imported.length - fresh.length;
+      entries = entries.concat(fresh);
+      persist();
+      render();
+      let m = "Imported " + fresh.length + (fresh.length === 1 ? " trip" : " trips");
+      if (dupes) m += ", " + dupes + " duplicate" + (dupes === 1 ? "" : "s") + " skipped";
+      if (skipped) m += ", " + skipped + " invalid row" + (skipped === 1 ? "" : "s") + " skipped";
+      flash(m);
+    } catch (e) {
+      flash("Couldn't read that file as CSV", true);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function saveEdit(id) {
+  const d = $("edit-date").value;
+  const p = $("edit-purpose").value.trim();
+  if (!d) { flash("Pick a date", true); return; }
+  if (!p) { flash("Purpose can't be empty", true); return; }
+  const en = entries.find((x) => x.id === id);
+  if (en) { en.date = d; en.purpose = p; }
+  editingId = null;
+  persist();
+  render();
+  flash("Trip updated");
+}
+
+// --- wiring ---
+$("list-area").addEventListener("click", (e) => {
+  const save = e.target.closest(".save");
+  if (save) { saveEdit(save.dataset.id); return; }
+
+  const cancel = e.target.closest(".cancel");
+  if (cancel) { editingId = null; render(); return; }
+
+  const del = e.target.closest(".delete");
+  if (del) {
+    if (del.dataset.armed) {
+      entries = entries.filter((x) => x.id !== del.dataset.id);
+      editingId = null;
+      persist();
+      render();
+      flash("Trip deleted");
+    } else {
+      del.dataset.armed = "1";
+      del.textContent = "Tap again to confirm";
+    }
+    return;
+  }
+
+  if (e.target.closest(".edit-panel")) return; // taps inside the form do nothing
+
+  const row = e.target.closest(".row");
+  if (row) { editingId = row.dataset.id; render(); }
+});
+
+$("trip-date").value = todayISO();
+$("add-btn").addEventListener("click", addEntry);
+$("trip-purpose").addEventListener("keydown", (e) => { if (e.key === "Enter") addEntry(); });
+$("trip-purpose").addEventListener("input", render);
+$("chip-row").addEventListener("click", (e) => {
+  const btn = e.target.closest(".chip");
+  if (!btn) return;
+  $("trip-purpose").value = btn.dataset.purpose;
+  render();
+});
+$("sort-btn").addEventListener("click", () => { sortDesc = !sortDesc; render(); });
+$("export-btn").addEventListener("click", exportCSV);
+$("import-btn").addEventListener("click", () => $("file-input").click());
+$("file-input").addEventListener("change", (e) => {
+  const f = e.target.files && e.target.files[0];
+  if (f) importCSV(f);
+  e.target.value = "";
+});
+
+load();
+
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js").catch(() => {});
+}
+</script>
+</body>
+</html>
